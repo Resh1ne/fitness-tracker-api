@@ -1,4 +1,4 @@
-package com.example.fitness_tracker;
+package com.example.fitnesstracker;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
