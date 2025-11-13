@@ -5,6 +5,7 @@ import com.example.fitnesstracker.dto.LoginRequest;
 import com.example.fitnesstracker.dto.RegisterRequest;
 import com.example.fitnesstracker.entity.User;
 import com.example.fitnesstracker.entity.enums.Role;
+import com.example.fitnesstracker.exception.EmailAlreadyExistsException;
 import com.example.fitnesstracker.repository.UserRepository;
 import com.example.fitnesstracker.service.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +25,7 @@ public class AuthenticationService {
 
     public AuthenticationResponse register(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new IllegalStateException("Email already taken");
+            throw new EmailAlreadyExistsException("Email " + request.getEmail() + " is already taken");
         }
 
         var user = User.builder()
