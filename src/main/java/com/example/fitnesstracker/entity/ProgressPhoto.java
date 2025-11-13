@@ -24,8 +24,7 @@ public class ProgressPhoto {
     @Column(name = "content_type")
     private String contentType;
 
-    @Lob
-    @Column(name = "data", nullable = false)
+    @Column(name = "data", nullable = false, columnDefinition = "bytea")
     private byte[] data;
 
     @Column(name = "upload_time", nullable = false)
