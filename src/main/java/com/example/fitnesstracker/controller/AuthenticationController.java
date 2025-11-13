@@ -2,6 +2,7 @@ package com.example.fitnesstracker.controller;
 
 import com.example.fitnesstracker.dto.AuthenticationResponse;
 import com.example.fitnesstracker.dto.LoginRequest;
+import com.example.fitnesstracker.dto.RefreshTokenRequest;
 import com.example.fitnesstracker.dto.RegisterRequest;
 import com.example.fitnesstracker.service.impl.AuthenticationService;
 import jakarta.validation.Valid;
@@ -27,5 +28,10 @@ public class AuthenticationController {
     @PostMapping("/login")
     public ResponseEntity<AuthenticationResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authenticationService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthenticationResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
+        return ResponseEntity.ok(authenticationService.refreshToken(request.getRefreshToken()));
     }
 }
