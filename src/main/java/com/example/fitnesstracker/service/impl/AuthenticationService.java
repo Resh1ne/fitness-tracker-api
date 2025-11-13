@@ -35,10 +35,13 @@ public class AuthenticationService {
                 .build();
 
         userRepository.save(user);
-        var jwtToken = jwtService.generateToken(user);
+
+        var accessToken = jwtService.generateToken(user);
+        var refreshToken = jwtService.generateRefreshToken(user);
 
         return AuthenticationResponse.builder()
-                .token(jwtToken)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
     }
 
@@ -48,9 +51,12 @@ public class AuthenticationService {
         var user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalStateException("User not found after authentication"));
 
-        var jwtToken = jwtService.generateToken(user);
+        var accessToken = jwtService.generateToken(user);
+        var refreshToken = jwtService.generateRefreshToken(user);
+
         return AuthenticationResponse.builder()
-                .token(jwtToken)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
     }
 }
