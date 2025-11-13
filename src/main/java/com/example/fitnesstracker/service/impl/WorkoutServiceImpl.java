@@ -4,6 +4,7 @@ import com.example.fitnesstracker.dto.CreateWorkoutRequestDto;
 import com.example.fitnesstracker.dto.UpdateWorkoutRequestDto;
 import com.example.fitnesstracker.dto.WorkoutResponseDto;
 import com.example.fitnesstracker.entity.Workout;
+import com.example.fitnesstracker.exception.ResourceNotFoundException;
 import com.example.fitnesstracker.mapper.WorkoutMapper;
 import com.example.fitnesstracker.repository.WorkoutRepository;
 import com.example.fitnesstracker.service.WorkoutService;
@@ -42,7 +43,7 @@ public class WorkoutServiceImpl implements WorkoutService {
     @Transactional(readOnly = true)
     public WorkoutResponseDto getWorkoutById(Long id) {
         Workout workout = workoutRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Workout not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Workout not found with id: " + id));
         return workoutMapper.toDto(workout);
     }
 
@@ -50,7 +51,7 @@ public class WorkoutServiceImpl implements WorkoutService {
     @Transactional
     public WorkoutResponseDto updateWorkout(Long id, UpdateWorkoutRequestDto requestDto) {
         Workout workout = workoutRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Workout not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Workout not found with id: " + id));
         workoutMapper.updateWorkoutFromDto(requestDto, workout);
         Workout updatedWorkout = workoutRepository.save(workout);
         return workoutMapper.toDto(updatedWorkout);
@@ -60,7 +61,7 @@ public class WorkoutServiceImpl implements WorkoutService {
     @Transactional
     public void deleteWorkout(Long id) {
         if (!workoutRepository.existsById(id)) {
-            throw new RuntimeException("Workout not found with id: " + id);
+            throw new ResourceNotFoundException("Workout not found with id: " + id);
         }
         workoutRepository.deleteById(id);
 

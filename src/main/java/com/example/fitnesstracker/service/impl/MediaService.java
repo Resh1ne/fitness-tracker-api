@@ -2,6 +2,7 @@ package com.example.fitnesstracker.service.impl;
 
 import com.example.fitnesstracker.entity.ProgressPhoto;
 import com.example.fitnesstracker.entity.User;
+import com.example.fitnesstracker.exception.ResourceNotFoundException;
 import com.example.fitnesstracker.repository.ProgressPhotoRepository;
 import com.example.fitnesstracker.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ public class MediaService {
     @Transactional
     public Long uploadPhoto(MultipartFile file, String userEmail) throws IOException {
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + userEmail));
 
         ProgressPhoto photo = ProgressPhoto.builder()
                 .filename(StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename())))
@@ -42,7 +43,7 @@ public class MediaService {
     @Transactional(readOnly = true)
     public ProgressPhoto getPhoto(Long photoId, String userEmail) {
         ProgressPhoto photo = photoRepository.findById(photoId)
-                .orElseThrow(() -> new RuntimeException("Photo not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Photo not found with id: " + photoId));
 
         if (!photo.getUser().getEmail().equals(userEmail)) {
             throw new AccessDeniedException("You do not have permission to view this photo");
