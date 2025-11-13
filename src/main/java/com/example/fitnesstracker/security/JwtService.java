@@ -1,4 +1,4 @@
-package com.example.fitnesstracker.service.jwt;
+package com.example.fitnesstracker.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

@@ -7,7 +7,7 @@ import com.example.fitnesstracker.entity.User;
 import com.example.fitnesstracker.entity.enums.Role;
 import com.example.fitnesstracker.exception.EmailAlreadyExistsException;
 import com.example.fitnesstracker.repository.UserRepository;
-import com.example.fitnesstracker.service.jwt.JwtService;
+import com.example.fitnesstracker.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

@@ -1,6 +1,5 @@
-package com.example.fitnesstracker.config;
+package com.example.fitnesstracker.security;
 
-import com.example.fitnesstracker.service.jwt.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
