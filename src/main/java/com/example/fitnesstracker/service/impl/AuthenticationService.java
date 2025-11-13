@@ -6,8 +6,10 @@ import com.example.fitnesstracker.dto.RegisterRequest;
 import com.example.fitnesstracker.entity.User;
 import com.example.fitnesstracker.entity.enums.Role;
 import com.example.fitnesstracker.exception.EmailAlreadyExistsException;
+import com.example.fitnesstracker.exception.InvalidTokenException;
+import com.example.fitnesstracker.exception.ResourceNotFoundException;
 import com.example.fitnesstracker.repository.UserRepository;
-import com.example.fitnesstracker.service.jwt.JwtService;
+import com.example.fitnesstracker.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -35,10 +37,13 @@ public class AuthenticationService {
                 .build();
 
         userRepository.save(user);
-        var jwtToken = jwtService.generateToken(user);
+
+        var accessToken = jwtService.generateToken(user);
+        var refreshToken = jwtService.generateRefreshToken(user);
 
         return AuthenticationResponse.builder()
-                .token(jwtToken)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
     }
 
@@ -48,9 +53,34 @@ public class AuthenticationService {
         var user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalStateException("User not found after authentication"));
 
-        var jwtToken = jwtService.generateToken(user);
+        var accessToken = jwtService.generateToken(user);
+        var refreshToken = jwtService.generateRefreshToken(user);
+
         return AuthenticationResponse.builder()
-                .token(jwtToken)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    public AuthenticationResponse refreshToken(String refreshToken) {
+        String userEmail = jwtService.extractUsername(refreshToken);
+        if (userEmail == null) {
+            throw new InvalidTokenException("Invalid Refresh Token");
+        }
+
+        var user = this.userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User associated with this token not found"));
+
+        if (!jwtService.isTokenValid(refreshToken, user)) {
+            throw new InvalidTokenException("Invalid Refresh Token");
+        }
+
+        var accessToken = jwtService.generateToken(user);
+        var newRefreshToken = jwtService.generateRefreshToken(user);
+
+        return AuthenticationResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(newRefreshToken)
                 .build();
     }
 }
