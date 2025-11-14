@@ -1,5 +1,6 @@
 package com.example.fitnesstracker.entity;
 
+import com.example.fitnesstracker.entity.enums.WorkoutType;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -28,4 +29,8 @@ public class Workout {
 
     @Column(name = "notes")
     private String notes;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "workout_type")
+    private WorkoutType type;
 }

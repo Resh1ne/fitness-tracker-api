@@ -1,5 +1,6 @@
 package com.example.fitnesstracker.dto;
 
+import com.example.fitnesstracker.entity.enums.WorkoutType;
 import lombok.Data;
 import java.time.LocalDate;
 
@@ -11,4 +12,5 @@ public class WorkoutResponseDto {
     private Integer duration;
     private Integer calories;
     private String notes;
+    private WorkoutType type;
 }

@@ -1,5 +1,6 @@
 package com.example.fitnesstracker.dto;
 
+import com.example.fitnesstracker.entity.enums.WorkoutType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -14,5 +15,6 @@ public class UpdateWorkoutRequestDto {
     private Integer duration;
     private Integer calories;
     private String notes;
+    private WorkoutType type;
 }
 
