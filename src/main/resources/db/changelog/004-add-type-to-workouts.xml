@@ -5,9 +5,10 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                             http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
+    <changeSet id="4" author="daniil">
+        <addColumn tableName="workouts">
+            <column name="workout_type" type="varchar(50)"/>
+        </addColumn>
+    </changeSet>
 
-    <include file="001-create-workouts-table.xml" relativeToChangelogFile="true"/>
-    <include file="002-create-users-table.xml" relativeToChangelogFile="true"/>
-    <include file="003-create-progress-photos-table.xml" relativeToChangelogFile="true"/>
-    <include file="004-add-type-to-workouts.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

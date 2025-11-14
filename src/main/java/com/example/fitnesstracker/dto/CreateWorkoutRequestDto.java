@@ -1,5 +1,6 @@
 package com.example.fitnesstracker.dto;
 
+import com.example.fitnesstracker.entity.enums.WorkoutType;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -23,4 +24,5 @@ public class CreateWorkoutRequestDto {
     @Positive(message = "Calories burned must be a positive number")
     private Integer calories;
     private String notes;
+    private WorkoutType type;
 }
