@@ -2,6 +2,7 @@ package com.example.fitnesstracker;
 
 import com.example.fitnesstracker.dto.request.CreateWorkoutRequestDto;
 import com.example.fitnesstracker.dto.request.UpdateWorkoutRequestDto;
+import com.example.fitnesstracker.dto.request.WorkoutFilterDto;
 import com.example.fitnesstracker.dto.response.WorkoutPageResponseDto;
 import com.example.fitnesstracker.dto.response.WorkoutResponseDto;
 import com.example.fitnesstracker.entity.Workout;
@@ -19,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -167,25 +169,31 @@ class WorkoutServiceImplTest {
     }
 
     @Test
-    @DisplayName("getAllWorkouts should return a paginated response of workouts")
+    @DisplayName("getAllWorkouts should return a paginated response based on filter and pageable")
     void getAllWorkouts_shouldReturnPaginatedResponse() {
-        int page = 0;
-        int size = 10;
-        Page<Workout> workoutPage = new PageImpl<>(List.of(workout));
+        WorkoutFilterDto filter = new WorkoutFilterDto();
+        filter.setType(WorkoutType.CARDIO);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Workout> workoutPage = new PageImpl<>(List.of(workout), pageable, 1);
+        WorkoutPageResponseDto expectedResponse = new WorkoutPageResponseDto();
+        expectedResponse.setContent(List.of(workoutDto));
+        expectedResponse.setPage(0);
+        expectedResponse.setSize(10);
+        expectedResponse.setTotalElements(1);
+        expectedResponse.setTotalPages(1);
         when(workoutRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(workoutPage);
-        when(workoutMapper.toDto(workout)).thenReturn(workoutDto);
+        when(workoutMapper.toPageResponseDto(workoutPage)).thenReturn(expectedResponse);
 
-        WorkoutPageResponseDto result = workoutService.getAllWorkouts(
-                WorkoutType.CARDIO, null, null, null, null, "date", "ASC", page, size);
+        WorkoutPageResponseDto actualResult = workoutService.getAllWorkouts(filter, pageable);
 
-        assertThat(result).isNotNull();
-        assertThat(result.getPage()).isEqualTo(page);
-        assertThat(result.getSize()).isEqualTo(size);
-        assertThat(result.getTotalElements()).isEqualTo(1);
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().getFirst().getType()).isEqualTo(WorkoutType.CARDIO);
+        assertThat(actualResult).isNotNull();
+        assertThat(actualResult.getPage()).isEqualTo(0);
+        assertThat(actualResult.getTotalElements()).isEqualTo(1);
+        assertThat(actualResult.getContent()).hasSize(1);
+        assertThat(actualResult.getContent().getFirst().getName()).isEqualTo("Morning Run");
         verify(workoutRepository).findAll(any(Specification.class), any(Pageable.class));
-        verify(workoutMapper, times(1)).toDto(any(Workout.class));
+        verify(workoutMapper).toPageResponseDto(workoutPage);
+        verify(workoutMapper, never()).toDto(any(Workout.class));
     }
 }

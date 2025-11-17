@@ -1,5 +1,6 @@
 package com.example.fitnesstracker.repository.specification;
 
+import com.example.fitnesstracker.dto.request.WorkoutFilterDto;
 import com.example.fitnesstracker.entity.Workout;
 import com.example.fitnesstracker.entity.enums.WorkoutType;
 import org.springframework.data.jpa.domain.Specification;
@@ -31,5 +32,15 @@ public class WorkoutSpecification {
     public static Specification<Workout> durationTo(Integer durationTo) {
         return (root, query, cb) ->
                 durationTo == null ? cb.conjunction() : cb.lessThanOrEqualTo(root.get("duration"), durationTo);
+    }
+
+    public static Specification<Workout> build(WorkoutFilterDto filter) {
+        return Specification.allOf(
+                hasType(filter.getType()),
+                dateFrom(filter.getDateFrom()),
+                dateTo(filter.getDateTo()),
+                durationFrom(filter.getDurationFrom()),
+                durationTo(filter.getDurationTo())
+        );
     }
 }
