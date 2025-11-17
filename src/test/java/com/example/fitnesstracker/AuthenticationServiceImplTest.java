@@ -1,8 +1,8 @@
 package com.example.fitnesstracker;
 
-import com.example.fitnesstracker.dto.AuthenticationResponse;
-import com.example.fitnesstracker.dto.LoginRequest;
-import com.example.fitnesstracker.dto.RegisterRequest;
+import com.example.fitnesstracker.dto.request.LoginRequest;
+import com.example.fitnesstracker.dto.request.RegisterRequest;
+import com.example.fitnesstracker.dto.response.AuthenticationResponse;
 import com.example.fitnesstracker.entity.User;
 import com.example.fitnesstracker.entity.enums.Role;
 import com.example.fitnesstracker.exception.EmailAlreadyExistsException;
@@ -10,7 +10,7 @@ import com.example.fitnesstracker.exception.InvalidTokenException;
 import com.example.fitnesstracker.exception.ResourceNotFoundException;
 import com.example.fitnesstracker.repository.UserRepository;
 import com.example.fitnesstracker.security.JwtService;
-import com.example.fitnesstracker.service.impl.AuthenticationService;
+import com.example.fitnesstracker.service.impl.AuthenticationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -30,7 +31,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class AuthenticationServiceTest {
+class AuthenticationServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
@@ -45,7 +46,7 @@ class AuthenticationServiceTest {
     private AuthenticationManager authenticationManager;
 
     @InjectMocks
-    private AuthenticationService authenticationService;
+    private AuthenticationServiceImpl authenticationService;
 
     private User user;
     private RegisterRequest registerRequest;
@@ -77,15 +78,14 @@ class AuthenticationServiceTest {
         when(userRepository.findByEmail(registerRequest.getEmail())).thenReturn(Optional.empty());
         when(passwordEncoder.encode(registerRequest.getPassword())).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(user);
-        when(jwtService.generateToken(any(User.class))).thenReturn("access_token");
-        when(jwtService.generateRefreshToken(any(User.class))).thenReturn("refresh_token");
+        when(jwtService.generateToken(any(UserDetails.class))).thenReturn("access_token");
+        when(jwtService.generateRefreshToken(any(UserDetails.class))).thenReturn("refresh_token");
 
         AuthenticationResponse response = authenticationService.register(registerRequest);
 
         assertThat(response).isNotNull();
         assertThat(response.getAccessToken()).isEqualTo("access_token");
         assertThat(response.getRefreshToken()).isEqualTo("refresh_token");
-
         verify(userRepository).findByEmail(registerRequest.getEmail());
         verify(passwordEncoder).encode(registerRequest.getPassword());
         verify(userRepository).save(any(User.class));
@@ -107,8 +107,8 @@ class AuthenticationServiceTest {
     @DisplayName("login should authenticate user and return tokens for valid credentials")
     void login_whenCredentialsAreValid_shouldReturnTokens() {
         when(userRepository.findByEmail(loginRequest.getEmail())).thenReturn(Optional.of(user));
-        when(jwtService.generateToken(user)).thenReturn("access_token");
-        when(jwtService.generateRefreshToken(user)).thenReturn("refresh_token");
+        when(jwtService.generateToken(any(UserDetails.class))).thenReturn("access_token");
+        when(jwtService.generateRefreshToken(any(UserDetails.class))).thenReturn("refresh_token");
 
         AuthenticationResponse response = authenticationService.login(loginRequest);
 
@@ -125,9 +125,9 @@ class AuthenticationServiceTest {
         String validRefreshToken = "valid_refresh_token";
         when(jwtService.extractUsername(validRefreshToken)).thenReturn(user.getEmail());
         when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(jwtService.isTokenValid(validRefreshToken, user)).thenReturn(true);
-        when(jwtService.generateToken(user)).thenReturn("new_access_token");
-        when(jwtService.generateRefreshToken(user)).thenReturn("new_refresh_token");
+        when(jwtService.isTokenValid(eq(validRefreshToken), any(UserDetails.class))).thenReturn(true);
+        when(jwtService.generateToken(any(UserDetails.class))).thenReturn("new_access_token");
+        when(jwtService.generateRefreshToken(any(UserDetails.class))).thenReturn("new_refresh_token");
 
         AuthenticationResponse response = authenticationService.refreshToken(validRefreshToken);
 
@@ -136,7 +136,7 @@ class AuthenticationServiceTest {
         assertThat(response.getRefreshToken()).isEqualTo("new_refresh_token");
         verify(jwtService).extractUsername(validRefreshToken);
         verify(userRepository).findByEmail(user.getEmail());
-        verify(jwtService).isTokenValid(validRefreshToken, user);
+        verify(jwtService).isTokenValid(eq(validRefreshToken), any(UserDetails.class));
     }
 
     @Test
@@ -168,7 +168,7 @@ class AuthenticationServiceTest {
         String expiredToken = "expired_token";
         when(jwtService.extractUsername(expiredToken)).thenReturn(user.getEmail());
         when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-        when(jwtService.isTokenValid(expiredToken, user)).thenReturn(false);
+        when(jwtService.isTokenValid(eq(expiredToken), any(UserDetails.class))).thenReturn(false);
 
         assertThatThrownBy(() -> authenticationService.refreshToken(expiredToken))
                 .isInstanceOf(InvalidTokenException.class)

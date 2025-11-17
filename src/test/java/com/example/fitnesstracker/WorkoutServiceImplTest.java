@@ -1,9 +1,9 @@
 package com.example.fitnesstracker;
 
-import com.example.fitnesstracker.dto.CreateWorkoutRequestDto;
-import com.example.fitnesstracker.dto.UpdateWorkoutRequestDto;
-import com.example.fitnesstracker.dto.WorkoutPageResponseDto;
-import com.example.fitnesstracker.dto.WorkoutResponseDto;
+import com.example.fitnesstracker.dto.request.CreateWorkoutRequestDto;
+import com.example.fitnesstracker.dto.request.UpdateWorkoutRequestDto;
+import com.example.fitnesstracker.dto.response.WorkoutPageResponseDto;
+import com.example.fitnesstracker.dto.response.WorkoutResponseDto;
 import com.example.fitnesstracker.entity.Workout;
 import com.example.fitnesstracker.entity.enums.WorkoutType;
 import com.example.fitnesstracker.exception.ResourceNotFoundException;

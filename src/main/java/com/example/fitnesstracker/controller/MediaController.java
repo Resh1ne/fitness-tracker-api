@@ -1,8 +1,8 @@
 package com.example.fitnesstracker.controller;
 
-import com.example.fitnesstracker.dto.ErrorResponse;
+import com.example.fitnesstracker.dto.response.ErrorResponse;
 import com.example.fitnesstracker.entity.ProgressPhoto;
-import com.example.fitnesstracker.service.impl.MediaService;
+import com.example.fitnesstracker.service.MediaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

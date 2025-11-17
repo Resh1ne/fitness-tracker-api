@@ -2,11 +2,15 @@ package com.example.fitnesstracker.entity;
 
 import com.example.fitnesstracker.entity.enums.WorkoutType;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 @Entity
 @Table(name = "workouts")
 public class Workout {

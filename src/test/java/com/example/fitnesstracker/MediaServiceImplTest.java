@@ -5,7 +5,7 @@ import com.example.fitnesstracker.entity.User;
 import com.example.fitnesstracker.exception.ResourceNotFoundException;
 import com.example.fitnesstracker.repository.ProgressPhotoRepository;
 import com.example.fitnesstracker.repository.UserRepository;
-import com.example.fitnesstracker.service.impl.MediaService;
+import com.example.fitnesstracker.service.impl.MediaServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class MediaServiceTest {
+class MediaServiceImplTest {
 
     @Mock
     private UserRepository userRepository;
@@ -37,7 +37,7 @@ class MediaServiceTest {
     private ProgressPhotoRepository photoRepository;
 
     @InjectMocks
-    private MediaService mediaService;
+    private MediaServiceImpl mediaService;
 
     private User ownerUser;
     private ProgressPhoto progressPhoto;

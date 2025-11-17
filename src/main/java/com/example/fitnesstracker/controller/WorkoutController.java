@@ -1,6 +1,10 @@
 package com.example.fitnesstracker.controller;
 
-import com.example.fitnesstracker.dto.*;
+import com.example.fitnesstracker.dto.request.CreateWorkoutRequestDto;
+import com.example.fitnesstracker.dto.request.UpdateWorkoutRequestDto;
+import com.example.fitnesstracker.dto.response.ErrorResponse;
+import com.example.fitnesstracker.dto.response.WorkoutPageResponseDto;
+import com.example.fitnesstracker.dto.response.WorkoutResponseDto;
 import com.example.fitnesstracker.entity.enums.WorkoutType;
 import com.example.fitnesstracker.service.WorkoutService;
 import io.swagger.v3.oas.annotations.Operation;

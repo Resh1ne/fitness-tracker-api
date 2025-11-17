@@ -3,11 +3,9 @@ package com.example.fitnesstracker.repository.specification;
 import com.example.fitnesstracker.entity.Workout;
 import com.example.fitnesstracker.entity.enums.WorkoutType;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 
-@Component
 public class WorkoutSpecification {
 
     public static Specification<Workout> hasType(WorkoutType type) {

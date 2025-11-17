@@ -1,6 +1,6 @@
 package com.example.fitnesstracker.exception;
 
-import com.example.fitnesstracker.dto.ErrorResponse;
+import com.example.fitnesstracker.dto.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

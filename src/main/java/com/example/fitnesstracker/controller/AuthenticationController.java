@@ -1,7 +1,11 @@
 package com.example.fitnesstracker.controller;
 
-import com.example.fitnesstracker.dto.*;
-import com.example.fitnesstracker.service.impl.AuthenticationService;
+import com.example.fitnesstracker.dto.request.LoginRequest;
+import com.example.fitnesstracker.dto.request.RefreshTokenRequest;
+import com.example.fitnesstracker.dto.request.RegisterRequest;
+import com.example.fitnesstracker.dto.response.AuthenticationResponse;
+import com.example.fitnesstracker.dto.response.ErrorResponse;
+import com.example.fitnesstracker.service.AuthenticationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
