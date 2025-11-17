@@ -14,13 +14,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Optional;
 
+import static com.example.fitnesstracker.TestDataFactory.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -45,41 +45,27 @@ class MediaServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        ownerUser = User.builder().id(1L).email("owner@example.com").build();
-        User.builder().id(2L).email("other@example.com").build();
-
-        progressPhoto = ProgressPhoto.builder()
-                .id(10L)
-                .filename("test-photo.jpg")
-                .contentType("image/jpeg")
-                .data(new byte[]{1, 2, 3})
-                .user(ownerUser)
-                .build();
-
-        mockFile = new MockMultipartFile(
-                "file",
-                "test-photo.jpg",
-                "image/jpeg",
-                new byte[]{1, 2, 3}
-        );
+        ownerUser = TestDataFactory.createOwnerUser();
+        progressPhoto = TestDataFactory.createProgressPhoto(ownerUser);
+        mockFile = TestDataFactory.createMockMultipartFile();
     }
 
     @Test
     @DisplayName("uploadPhoto should save photo and return its ID when user exists")
     void uploadPhoto_whenUserExists_shouldSavePhotoAndReturnId() throws IOException {
-        when(userRepository.findByEmail("owner@example.com")).thenReturn(Optional.of(ownerUser));
+        when(userRepository.findByEmail(OWNER_EMAIL)).thenReturn(Optional.of(ownerUser));
         ArgumentCaptor<ProgressPhoto> photoArgumentCaptor = ArgumentCaptor.forClass(ProgressPhoto.class);
         when(photoRepository.save(photoArgumentCaptor.capture())).thenReturn(progressPhoto);
 
-        Long savedPhotoId = mediaService.uploadPhoto(mockFile, "owner@example.com");
+        Long savedPhotoId = mediaService.uploadPhoto(mockFile, OWNER_EMAIL);
 
-        assertThat(savedPhotoId).isEqualTo(10L);
+        assertThat(savedPhotoId).isEqualTo(PHOTO_ID);
         ProgressPhoto capturedPhoto = photoArgumentCaptor.getValue();
-        assertThat(capturedPhoto.getFilename()).isEqualTo("test-photo.jpg");
-        assertThat(capturedPhoto.getContentType()).isEqualTo("image/jpeg");
-        assertThat(capturedPhoto.getData()).isEqualTo(new byte[]{1, 2, 3});
+        assertThat(capturedPhoto.getFilename()).isEqualTo(PHOTO_FILENAME);
+        assertThat(capturedPhoto.getContentType()).isEqualTo(PHOTO_CONTENT_TYPE);
+        assertThat(capturedPhoto.getData()).isEqualTo(PHOTO_DATA);
         assertThat(capturedPhoto.getUser()).isEqualTo(ownerUser);
-        verify(userRepository).findByEmail("owner@example.com");
+        verify(userRepository).findByEmail(OWNER_EMAIL);
         verify(photoRepository).save(any(ProgressPhoto.class));
     }
 
@@ -97,14 +83,14 @@ class MediaServiceImplTest {
     @Test
     @DisplayName("getPhoto should return photo when requested by owner")
     void getPhoto_whenRequestedByOwner_shouldReturnPhoto() {
-        when(photoRepository.findById(10L)).thenReturn(Optional.of(progressPhoto));
+        when(photoRepository.findById(PHOTO_ID)).thenReturn(Optional.of(progressPhoto));
 
-        ProgressPhoto foundPhoto = mediaService.getPhoto(10L, "owner@example.com");
+        ProgressPhoto foundPhoto = mediaService.getPhoto(PHOTO_ID, OWNER_EMAIL);
 
         assertThat(foundPhoto).isNotNull();
-        assertThat(foundPhoto.getId()).isEqualTo(10L);
-        assertThat(foundPhoto.getUser().getEmail()).isEqualTo("owner@example.com");
-        verify(photoRepository).findById(10L);
+        assertThat(foundPhoto.getId()).isEqualTo(PHOTO_ID);
+        assertThat(foundPhoto.getUser().getEmail()).isEqualTo(OWNER_EMAIL);
+        verify(photoRepository).findById(PHOTO_ID);
     }
 
     @Test
@@ -113,7 +99,7 @@ class MediaServiceImplTest {
         long nonExistentId = 99L;
         when(photoRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> mediaService.getPhoto(nonExistentId, "owner@example.com"))
+        assertThatThrownBy(() -> mediaService.getPhoto(nonExistentId, OWNER_EMAIL))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Photo not found with id: " + nonExistentId);
     }
@@ -121,9 +107,9 @@ class MediaServiceImplTest {
     @Test
     @DisplayName("getPhoto should throw AccessDeniedException when requested by non-owner")
     void getPhoto_whenRequestedByNonOwner_shouldThrowAccessDeniedException() {
-        when(photoRepository.findById(10L)).thenReturn(Optional.of(progressPhoto));
+        when(photoRepository.findById(PHOTO_ID)).thenReturn(Optional.of(progressPhoto));
 
-        assertThatThrownBy(() -> mediaService.getPhoto(10L, "other@example.com"))
+        assertThatThrownBy(() -> mediaService.getPhoto(PHOTO_ID, OTHER_USER_EMAIL))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage("You do not have permission to view this photo");
     }

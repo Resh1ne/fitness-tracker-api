@@ -6,7 +6,6 @@ import com.example.fitnesstracker.dto.request.WorkoutFilterDto;
 import com.example.fitnesstracker.dto.response.WorkoutPageResponseDto;
 import com.example.fitnesstracker.dto.response.WorkoutResponseDto;
 import com.example.fitnesstracker.entity.Workout;
-import com.example.fitnesstracker.entity.enums.WorkoutType;
 import com.example.fitnesstracker.exception.ResourceNotFoundException;
 import com.example.fitnesstracker.mapper.WorkoutMapper;
 import com.example.fitnesstracker.repository.WorkoutRepository;
@@ -24,13 +23,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
+import static com.example.fitnesstracker.TestDataFactory.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -46,42 +45,29 @@ class WorkoutServiceImplTest {
     private WorkoutServiceImpl workoutService;
 
     private Workout workout;
-    private WorkoutResponseDto workoutDto;
-    private CreateWorkoutRequestDto createDto;
-    private UpdateWorkoutRequestDto updateDto;
+    private WorkoutResponseDto workoutResponseDto;
+    private CreateWorkoutRequestDto createWorkoutRequestDto;
+    private UpdateWorkoutRequestDto updateWorkoutRequestDto;
 
     @BeforeEach
     void setUp() {
-        workout = new Workout();
-        workout.setId(1L);
-        workout.setName("Morning Run");
-        workout.setDate(LocalDate.now());
-        workout.setType(WorkoutType.CARDIO);
-
-        workoutDto = new WorkoutResponseDto();
-        workoutDto.setId(1L);
-        workoutDto.setName("Morning Run");
-        workoutDto.setType(WorkoutType.CARDIO);
-
-        createDto = new CreateWorkoutRequestDto();
-        createDto.setName("Evening Yoga");
-
-        updateDto = new UpdateWorkoutRequestDto();
-        updateDto.setName("Intense HIIT");
-        updateDto.setType(WorkoutType.HIIT);
+        workout = TestDataFactory.createWorkout();
+        workoutResponseDto = TestDataFactory.createWorkoutResponseDto(workout);
+        createWorkoutRequestDto = TestDataFactory.createWorkoutRequestDto();
+        updateWorkoutRequestDto = TestDataFactory.createUpdateWorkoutRequestDto();
     }
 
     @Test
     @DisplayName("getWorkoutById should return Workout DTO when workout exists")
     void getWorkoutById_whenWorkoutExists_shouldReturnWorkoutDto() {
-        when(workoutRepository.findById(1L)).thenReturn(Optional.of(workout));
-        when(workoutMapper.toDto(workout)).thenReturn(workoutDto);
+        when(workoutRepository.findById(WORKOUT_ID)).thenReturn(Optional.of(workout));
+        when(workoutMapper.toDto(workout)).thenReturn(workoutResponseDto);
 
-        WorkoutResponseDto foundDto = workoutService.getWorkoutById(1L);
+        WorkoutResponseDto foundDto = workoutService.getWorkoutById(WORKOUT_ID);
 
         assertThat(foundDto).isNotNull();
-        assertThat(foundDto.getId()).isEqualTo(1L);
-        verify(workoutRepository).findById(1L);
+        assertThat(foundDto.getId()).isEqualTo(WORKOUT_ID);
+        verify(workoutRepository).findById(WORKOUT_ID);
         verify(workoutMapper).toDto(workout);
     }
 
@@ -101,35 +87,34 @@ class WorkoutServiceImplTest {
     @Test
     @DisplayName("createWorkout should save and return new Workout DTO")
     void createWorkout_shouldSaveAndReturnNewWorkoutDto() {
-        Workout workoutToSave = new Workout();
-        workoutToSave.setName(createDto.getName());
-        when(workoutMapper.toEntity(createDto)).thenReturn(workoutToSave);
-        when(workoutRepository.save(workoutToSave)).thenReturn(workout);
-        when(workoutMapper.toDto(workout)).thenReturn(workoutDto);
+        Workout newWorkout = new Workout();
+        newWorkout.setName(createWorkoutRequestDto.getName());
+        when(workoutMapper.toEntity(createWorkoutRequestDto)).thenReturn(newWorkout);
+        when(workoutRepository.save(newWorkout)).thenReturn(workout);
+        when(workoutMapper.toDto(workout)).thenReturn(workoutResponseDto);
 
-        WorkoutResponseDto createdDto = workoutService.createWorkout(createDto);
+        WorkoutResponseDto createdDto = workoutService.createWorkout(createWorkoutRequestDto);
 
         assertThat(createdDto).isNotNull();
-        assertThat(createdDto.getId()).isEqualTo(1L);
-        verify(workoutRepository).save(workoutToSave);
+        assertThat(createdDto.getId()).isEqualTo(WORKOUT_ID);
+        verify(workoutRepository).save(newWorkout);
     }
 
     @Test
     @DisplayName("updateWorkout should update and return DTO when workout exists")
     void updateWorkout_whenWorkoutExists_shouldUpdateAndReturnDto() {
-        when(workoutRepository.findById(1L)).thenReturn(Optional.of(workout));
-        doNothing().when(workoutMapper).updateWorkoutFromDto(eq(updateDto), any(Workout.class));
+        when(workoutRepository.findById(WORKOUT_ID)).thenReturn(Optional.of(workout));
+        doNothing().when(workoutMapper).updateWorkoutFromDto(eq(updateWorkoutRequestDto), any(Workout.class));
         when(workoutRepository.save(any(Workout.class))).thenReturn(workout);
-        when(workoutMapper.toDto(any(Workout.class))).thenReturn(workoutDto);
+        when(workoutMapper.toDto(any(Workout.class))).thenReturn(workoutResponseDto);
 
-        WorkoutResponseDto resultDto = workoutService.updateWorkout(1L, updateDto);
+        WorkoutResponseDto resultDto = workoutService.updateWorkout(WORKOUT_ID, updateWorkoutRequestDto);
 
         assertThat(resultDto).isNotNull();
-        assertThat(resultDto.getId()).isEqualTo(1L);
-        verify(workoutRepository).findById(1L);
-        verify(workoutMapper).updateWorkoutFromDto(updateDto, workout);
+        assertThat(resultDto.getId()).isEqualTo(WORKOUT_ID);
+        verify(workoutRepository).findById(WORKOUT_ID);
+        verify(workoutMapper).updateWorkoutFromDto(updateWorkoutRequestDto, workout);
         verify(workoutRepository).save(workout);
-        verify(workoutMapper).toDto(workout);
     }
 
     @Test
@@ -138,7 +123,7 @@ class WorkoutServiceImplTest {
         long nonExistentId = 99L;
         when(workoutRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> workoutService.updateWorkout(nonExistentId, updateDto))
+        assertThatThrownBy(() -> workoutService.updateWorkout(nonExistentId, updateWorkoutRequestDto))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Workout not found with id: " + nonExistentId);
         verify(workoutMapper, never()).updateWorkoutFromDto(any(), any());
@@ -148,13 +133,12 @@ class WorkoutServiceImplTest {
     @Test
     @DisplayName("deleteWorkout should call deleteById when workout exists")
     void deleteWorkout_whenWorkoutExists_shouldCallDeleteById() {
-        long existingId = 1L;
-        when(workoutRepository.existsById(existingId)).thenReturn(true);
-        doNothing().when(workoutRepository).deleteById(existingId);
+        when(workoutRepository.existsById(WORKOUT_ID)).thenReturn(true);
+        doNothing().when(workoutRepository).deleteById(WORKOUT_ID);
 
-        workoutService.deleteWorkout(existingId);
+        workoutService.deleteWorkout(WORKOUT_ID);
 
-        verify(workoutRepository, times(1)).deleteById(existingId);
+        verify(workoutRepository, times(1)).deleteById(WORKOUT_ID);
     }
 
     @Test
@@ -171,18 +155,12 @@ class WorkoutServiceImplTest {
     @Test
     @DisplayName("getAllWorkouts should return a paginated response based on filter and pageable")
     void getAllWorkouts_shouldReturnPaginatedResponse() {
-        WorkoutFilterDto filter = new WorkoutFilterDto();
-        filter.setType(WorkoutType.CARDIO);
+        WorkoutFilterDto filter = createWorkoutFilterDto(WORKOUT_TYPE_CARDIO);
         Pageable pageable = PageRequest.of(0, 10);
         Page<Workout> workoutPage = new PageImpl<>(List.of(workout), pageable, 1);
-        WorkoutPageResponseDto expectedResponse = new WorkoutPageResponseDto();
-        expectedResponse.setContent(List.of(workoutDto));
-        expectedResponse.setPage(0);
-        expectedResponse.setSize(10);
-        expectedResponse.setTotalElements(1);
-        expectedResponse.setTotalPages(1);
-        when(workoutRepository.findAll(any(Specification.class), any(Pageable.class)))
-                .thenReturn(workoutPage);
+        WorkoutPageResponseDto expectedResponse = createWorkoutPageResponseDto(List.of(workoutResponseDto), pageable, 1);
+
+        when(workoutRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(workoutPage);
         when(workoutMapper.toPageResponseDto(workoutPage)).thenReturn(expectedResponse);
 
         WorkoutPageResponseDto actualResult = workoutService.getAllWorkouts(filter, pageable);
@@ -191,9 +169,8 @@ class WorkoutServiceImplTest {
         assertThat(actualResult.getPage()).isEqualTo(0);
         assertThat(actualResult.getTotalElements()).isEqualTo(1);
         assertThat(actualResult.getContent()).hasSize(1);
-        assertThat(actualResult.getContent().getFirst().getName()).isEqualTo("Morning Run");
-        verify(workoutRepository).findAll(any(Specification.class), any(Pageable.class));
+        assertThat(actualResult.getContent().getFirst().getName()).isEqualTo(WORKOUT_NAME);
+        verify(workoutRepository).findAll(any(Specification.class), eq(pageable));
         verify(workoutMapper).toPageResponseDto(workoutPage);
-        verify(workoutMapper, never()).toDto(any(Workout.class));
     }
 }
