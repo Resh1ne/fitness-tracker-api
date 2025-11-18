@@ -1,8 +1,8 @@
 package com.example.fitnesstracker.service.impl;
 
-import com.example.fitnesstracker.dto.AuthenticationResponse;
-import com.example.fitnesstracker.dto.LoginRequest;
-import com.example.fitnesstracker.dto.RegisterRequest;
+import com.example.fitnesstracker.dto.request.LoginRequest;
+import com.example.fitnesstracker.dto.request.RegisterRequest;
+import com.example.fitnesstracker.dto.response.AuthenticationResponse;
 import com.example.fitnesstracker.entity.User;
 import com.example.fitnesstracker.entity.enums.Role;
 import com.example.fitnesstracker.exception.EmailAlreadyExistsException;
@@ -10,21 +10,25 @@ import com.example.fitnesstracker.exception.InvalidTokenException;
 import com.example.fitnesstracker.exception.ResourceNotFoundException;
 import com.example.fitnesstracker.repository.UserRepository;
 import com.example.fitnesstracker.security.JwtService;
+import com.example.fitnesstracker.security.UserDetailsImpl;
+import com.example.fitnesstracker.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class AuthenticationService {
+public class AuthenticationServiceImpl implements AuthenticationService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
+    @Override
     public AuthenticationResponse register(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new EmailAlreadyExistsException("Email " + request.getEmail() + " is already taken");
@@ -38,8 +42,9 @@ public class AuthenticationService {
 
         userRepository.save(user);
 
-        var accessToken = jwtService.generateToken(user);
-        var refreshToken = jwtService.generateRefreshToken(user);
+        UserDetails userDetails = new UserDetailsImpl(user);
+        var accessToken = jwtService.generateToken(userDetails);
+        var refreshToken = jwtService.generateRefreshToken(userDetails);
 
         return AuthenticationResponse.builder()
                 .accessToken(accessToken)
@@ -47,14 +52,16 @@ public class AuthenticationService {
                 .build();
     }
 
+    @Override
     public AuthenticationResponse login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
         var user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new IllegalStateException("User not found after authentication"));
 
-        var accessToken = jwtService.generateToken(user);
-        var refreshToken = jwtService.generateRefreshToken(user);
+        UserDetails userDetails = new UserDetailsImpl(user);
+        var accessToken = jwtService.generateToken(userDetails);
+        var refreshToken = jwtService.generateRefreshToken(userDetails);
 
         return AuthenticationResponse.builder()
                 .accessToken(accessToken)
@@ -62,6 +69,7 @@ public class AuthenticationService {
                 .build();
     }
 
+    @Override
     public AuthenticationResponse refreshToken(String refreshToken) {
         String userEmail = jwtService.extractUsername(refreshToken);
         if (userEmail == null) {
@@ -71,12 +79,14 @@ public class AuthenticationService {
         var user = this.userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User associated with this token not found"));
 
-        if (!jwtService.isTokenValid(refreshToken, user)) {
+        UserDetails userDetails = new UserDetailsImpl(user);
+
+        if (!jwtService.isTokenValid(refreshToken, userDetails)) {
             throw new InvalidTokenException("Invalid Refresh Token");
         }
 
-        var accessToken = jwtService.generateToken(user);
-        var newRefreshToken = jwtService.generateRefreshToken(user);
+        var accessToken = jwtService.generateToken(userDetails);
+        var newRefreshToken = jwtService.generateRefreshToken(userDetails);
 
         return AuthenticationResponse.builder()
                 .accessToken(accessToken)

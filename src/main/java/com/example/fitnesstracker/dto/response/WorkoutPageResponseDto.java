@@ -1,11 +1,15 @@
-package com.example.fitnesstracker.dto;
+package com.example.fitnesstracker.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 @Schema(description = "Paginated response for a list of workouts")
 public class WorkoutPageResponseDto {
     @Schema(description = "The list of workout DTOs for the current page")

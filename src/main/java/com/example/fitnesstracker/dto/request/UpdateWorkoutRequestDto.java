@@ -1,13 +1,17 @@
-package com.example.fitnesstracker.dto;
+package com.example.fitnesstracker.dto.request;
 
 import com.example.fitnesstracker.entity.enums.WorkoutType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 @Schema(description = "Request DTO for updating a new workout")
 public class UpdateWorkoutRequestDto {
     @NotBlank(message = "Workout name cannot be empty")

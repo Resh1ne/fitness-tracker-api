@@ -1,16 +1,14 @@
-package com.example.fitnesstracker.dto;
+package com.example.fitnesstracker.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
 @Schema(description = "DTO for authentication response, containing access and refresh tokens")
 public class AuthenticationResponse {
     @JsonProperty("access_token")
