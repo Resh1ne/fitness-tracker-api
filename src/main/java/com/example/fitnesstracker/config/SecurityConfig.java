@@ -2,6 +2,7 @@ package com.example.fitnesstracker.config;
 
 import com.example.fitnesstracker.repository.UserRepository;
 import com.example.fitnesstracker.security.JwtAuthenticationFilter;
+import com.example.fitnesstracker.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,6 +52,7 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService(UserRepository userRepository) {
         return email -> userRepository.findByEmail(email)
+                .map(UserDetailsImpl::new)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
     }
 

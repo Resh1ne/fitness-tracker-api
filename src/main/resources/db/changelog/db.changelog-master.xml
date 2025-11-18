@@ -10,4 +10,5 @@
     <include file="002-create-users-table.xml" relativeToChangelogFile="true"/>
     <include file="003-create-progress-photos-table.xml" relativeToChangelogFile="true"/>
     <include file="004-add-type-to-workouts.xml" relativeToChangelogFile="true"/>
+    <include file="005-remove-bytea-and-add-s3-key.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

@@ -1,4 +1,4 @@
-package com.example.fitnesstracker.dto;
+package com.example.fitnesstracker.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;

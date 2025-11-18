@@ -1,20 +1,18 @@
-package com.example.fitnesstracker.dto;
+package com.example.fitnesstracker.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
-@Schema(description = "DTO for user login request")
-public class LoginRequest {
+@Schema(description = "DTO for user registration request")
+public class RegisterRequest {
     @NotBlank(message = "Email cannot be empty")
     @Email(message = "Email should be valid")
     @Schema(description = "User's email address, must be unique", example = "test@test.com", requiredMode = Schema.RequiredMode.REQUIRED)
