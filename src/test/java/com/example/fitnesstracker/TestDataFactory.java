@@ -15,6 +15,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 @UtilityClass
 public class TestDataFactory {
@@ -31,6 +32,7 @@ public class TestDataFactory {
     public static final String PHOTO_CONTENT_TYPE = "image/jpeg";
     public static final byte[] PHOTO_DATA = new byte[]{1, 2, 3};
     public static final Long PHOTO_ID = 10L;
+    public static final String PHOTO_OBJECT_KEY = UUID.randomUUID() + ".jpg";
 
     public static final Long WORKOUT_ID = 1L;
     public static final String WORKOUT_NAME = "Morning Run";
@@ -105,7 +107,13 @@ public class TestDataFactory {
     }
 
     public static ProgressPhoto createProgressPhoto(User owner) {
-        return ProgressPhoto.builder().id(PHOTO_ID).filename(PHOTO_FILENAME).contentType(PHOTO_CONTENT_TYPE).data(PHOTO_DATA).user(owner).build();
+        return ProgressPhoto.builder()
+                .id(PHOTO_ID)
+                .filename(PHOTO_FILENAME)
+                .contentType(PHOTO_CONTENT_TYPE)
+                .objectKey(PHOTO_OBJECT_KEY)
+                .user(owner)
+                .build();
     }
 
     public static MultipartFile createMockMultipartFile() {

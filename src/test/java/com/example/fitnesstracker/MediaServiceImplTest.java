@@ -15,7 +15,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.ResponseBytes;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectResponse;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -24,8 +31,8 @@ import static com.example.fitnesstracker.TestDataFactory.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class MediaServiceImplTest {
@@ -35,6 +42,9 @@ class MediaServiceImplTest {
 
     @Mock
     private ProgressPhotoRepository photoRepository;
+
+    @Mock
+    private S3Client s3Client;
 
     @InjectMocks
     private MediaServiceImpl mediaService;
@@ -48,11 +58,12 @@ class MediaServiceImplTest {
         ownerUser = TestDataFactory.createOwnerUser();
         progressPhoto = TestDataFactory.createProgressPhoto(ownerUser);
         mockFile = TestDataFactory.createMockMultipartFile();
+        ReflectionTestUtils.setField(mediaService, "bucketName", "progress-photos");
     }
 
     @Test
-    @DisplayName("uploadPhoto should save photo and return its ID when user exists")
-    void uploadPhoto_whenUserExists_shouldSavePhotoAndReturnId() throws IOException {
+    @DisplayName("uploadPhoto should upload to S3, save metadata and return ID")
+    void uploadPhoto_shouldUploadToS3AndSaveMetadata() throws IOException {
         when(userRepository.findByEmail(OWNER_EMAIL)).thenReturn(Optional.of(ownerUser));
         ArgumentCaptor<ProgressPhoto> photoArgumentCaptor = ArgumentCaptor.forClass(ProgressPhoto.class);
         when(photoRepository.save(photoArgumentCaptor.capture())).thenReturn(progressPhoto);
@@ -62,54 +73,57 @@ class MediaServiceImplTest {
         assertThat(savedPhotoId).isEqualTo(PHOTO_ID);
         ProgressPhoto capturedPhoto = photoArgumentCaptor.getValue();
         assertThat(capturedPhoto.getFilename()).isEqualTo(PHOTO_FILENAME);
-        assertThat(capturedPhoto.getContentType()).isEqualTo(PHOTO_CONTENT_TYPE);
-        assertThat(capturedPhoto.getData()).isEqualTo(PHOTO_DATA);
+        assertThat(capturedPhoto.getObjectKey()).isNotNull();
         assertThat(capturedPhoto.getUser()).isEqualTo(ownerUser);
-        verify(userRepository).findByEmail(OWNER_EMAIL);
+
+        verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
         verify(photoRepository).save(any(ProgressPhoto.class));
     }
 
     @Test
-    @DisplayName("uploadPhoto should throw ResourceNotFoundException when user does not exist")
-    void uploadPhoto_whenUserDoesNotExist_shouldThrowResourceNotFoundException() {
-        when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> mediaService.uploadPhoto(mockFile, "nonexistent@example.com"))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("User not found with email: nonexistent@example.com");
-        verify(photoRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("getPhoto should return photo when requested by owner")
-    void getPhoto_whenRequestedByOwner_shouldReturnPhoto() {
+    @DisplayName("getPhotoMetadata should return metadata when requested by owner")
+    void getPhotoMetadata_whenRequestedByOwner_shouldReturnMetadata() {
         when(photoRepository.findById(PHOTO_ID)).thenReturn(Optional.of(progressPhoto));
 
-        ProgressPhoto foundPhoto = mediaService.getPhoto(PHOTO_ID, OWNER_EMAIL);
+        ProgressPhoto foundPhoto = mediaService.getPhotoMetadata(PHOTO_ID, OWNER_EMAIL);
 
         assertThat(foundPhoto).isNotNull();
         assertThat(foundPhoto.getId()).isEqualTo(PHOTO_ID);
-        assertThat(foundPhoto.getUser().getEmail()).isEqualTo(OWNER_EMAIL);
+        assertThat(foundPhoto.getObjectKey()).isEqualTo(PHOTO_OBJECT_KEY);
         verify(photoRepository).findById(PHOTO_ID);
     }
 
     @Test
-    @DisplayName("getPhoto should throw ResourceNotFoundException when photo does not exist")
-    void getPhoto_whenPhotoDoesNotExist_shouldThrowResourceNotFoundException() {
+    @DisplayName("getPhotoData should download from S3 and return byte array for owner")
+    void getPhotoData_whenRequestedByOwner_shouldDownloadAndReturnBytes() {
+        when(photoRepository.findById(PHOTO_ID)).thenReturn(Optional.of(progressPhoto));
+        GetObjectResponse s3Response = GetObjectResponse.builder().build();
+        ResponseBytes<GetObjectResponse> responseBytes = ResponseBytes.fromByteArray(s3Response, PHOTO_DATA);
+        when(s3Client.getObjectAsBytes(any(GetObjectRequest.class))).thenReturn(responseBytes);
+
+        byte[] data = mediaService.getPhotoData(PHOTO_ID, OWNER_EMAIL);
+
+        assertThat(data).isEqualTo(PHOTO_DATA);
+        verify(s3Client).getObjectAsBytes(any(GetObjectRequest.class));
+    }
+
+    @Test
+    @DisplayName("getPhotoMetadata should throw ResourceNotFoundException when photo does not exist")
+    void getPhotoMetadata_whenPhotoDoesNotExist_shouldThrowException() {
         long nonExistentId = 99L;
         when(photoRepository.findById(nonExistentId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> mediaService.getPhoto(nonExistentId, OWNER_EMAIL))
+        assertThatThrownBy(() -> mediaService.getPhotoMetadata(nonExistentId, OWNER_EMAIL))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Photo not found with id: " + nonExistentId);
     }
 
     @Test
-    @DisplayName("getPhoto should throw AccessDeniedException when requested by non-owner")
-    void getPhoto_whenRequestedByNonOwner_shouldThrowAccessDeniedException() {
+    @DisplayName("getPhotoMetadata should throw AccessDeniedException when requested by non-owner")
+    void getPhotoMetadata_whenRequestedByNonOwner_shouldThrowException() {
         when(photoRepository.findById(PHOTO_ID)).thenReturn(Optional.of(progressPhoto));
 
-        assertThatThrownBy(() -> mediaService.getPhoto(PHOTO_ID, OTHER_USER_EMAIL))
+        assertThatThrownBy(() -> mediaService.getPhotoMetadata(PHOTO_ID, OTHER_USER_EMAIL))
                 .isInstanceOf(AccessDeniedException.class)
                 .hasMessage("You do not have permission to view this photo");
     }

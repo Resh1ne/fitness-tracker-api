@@ -8,5 +8,7 @@ import java.io.IOException;
 public interface MediaService {
     Long uploadPhoto(MultipartFile file, String userEmail) throws IOException;
 
-    ProgressPhoto getPhoto(Long photoId, String userEmail);
+    byte[] getPhotoData(Long photoId, String userEmail);
+
+    ProgressPhoto getPhotoMetadata(Long photoId, String userEmail);
 }

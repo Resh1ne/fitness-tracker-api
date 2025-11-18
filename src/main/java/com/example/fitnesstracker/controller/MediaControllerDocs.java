@@ -4,7 +4,9 @@ import com.example.fitnesstracker.dto.response.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Encoding;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,11 +22,17 @@ import java.io.IOException;
 @Tag(name = "Media Management", description = "APIs for uploading and retrieving user media (e.g., progress photos)")
 public interface MediaControllerDocs {
     @Operation(summary = "Upload a media file (progress photo)",
-            description = "Uploads a new photo for the authenticated user. The file is stored in the database.")
+            description = "Uploads a new photo for the authenticated user. The file is stored in an S3-compatible object storage (MinIO).")
+    @RequestBody(description = "The media file to upload.", required = true,
+            content = @Content(mediaType = "multipart/form-data",
+                    schema = @Schema(type = "object", requiredProperties = "file"),
+                    encoding = @Encoding(name = "file", contentType = "image/jpeg, image/png, image/gif")))
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Media file uploaded successfully", content = @Content(mediaType = "text/plain")),
-            @ApiResponse(responseCode = "400", description = "Bad Request", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content)
+            @ApiResponse(responseCode = "201", description = "Media file uploaded successfully. The ID of the new resource is in the Location header.",
+                    content = @Content(mediaType = "text/plain", schema = @Schema(type = "string", example = "Media uploaded successfully with ID: 1"))),
+            @ApiResponse(responseCode = "400", description = "Bad Request (e.g., no file part in the request or file is empty)",
+                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - JWT token is missing or invalid", content = @Content)
     })
     ResponseEntity<String> uploadMedia(@Parameter(description = "The image file to be uploaded", required = true)
                                        @RequestParam("file") MultipartFile file,
