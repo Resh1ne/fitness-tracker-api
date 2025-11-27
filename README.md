@@ -47,7 +47,7 @@ RESTful API для фитнес-трекера, разработанное на 
 ### 1. Клонирование репозитория
 
 ```bash
-git clone https://github.com/your-username/fitness-tracker-api.git
+git clone https://github.com/Resh1ne/fitness-tracker-api.git
 cd fitness-tracker-api
 ```
 
