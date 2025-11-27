@@ -1,93 +1,90 @@
 # Fitness Tracker API
 
-## Описание
+![Java](https://img.shields.io/badge/Java-21-blue) ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.3-green) ![Docker](https://img.shields.io/badge/Docker-blue) ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-blue)
 
-Необходимо разработать backend-приложение для трекинга фитнес-активностей, которое позволит пользователям записывать тренировки, отслеживать прогресс и анализировать показатели.
+RESTful API для фитнес-трекера, разработанное на стеке Java и Spring Boot. Приложение предоставляет backend-инфраструктуру для отслеживания тренировок, анализа прогресса и безопасного хранения пользовательских данных, включая медиафайлы.
 
-## Основные эндпоинты
+## 🚀 Основные возможности
 
-1. GET /workouts – Получение списка всех тренировок пользователя. Поддержка фильтров, сортировки, пагинации.
-2. GET /workouts/{id} – Получение конкретной тренировки по ID.
-3. POST /workouts – Добавление новой тренировки.
-4. PUT /workouts/{id} – Обновление данных о тренировке.
-5. DELETE /workouts/{id} – Удаление тренировки.
-6. POST /media – Загрузка фото прогресса (с хранением в файловой системе, облаке или хранить бинарные данные прямо в PostgreSQL (тип BYTEA)).
+*   **Архитектура и чистый код:** Приложение построено на многослойной архитектуре (Controller, Service, Repository) с использованием DTO и MapStruct, следуя принципам SOLID для обеспечения чистоты и поддерживаемости кода.
+*   **Полный CRUD для тренировок:** Создание, получение, обновление и удаление записей о тренировках.
+*   **JWT Аутентификация:** Безопасный доступ к эндпоинтам с использованием Access и Refresh токенов. Реализованы эндпоинты для регистрации и входа.
+*   **Загрузка медиафайлов:** Эндпоинт для загрузки фото прогресса с хранением в S3-совместимом хранилище (MinIO).
+*   **Расширенный поиск:** Мощный API для получения списка тренировок с поддержкой:
+    *   **Динамической фильтрации** (по типу, диапазону дат, длительности) с помощью **JPA Specifications**.
+    *   **Сортировки** (по дате, калориям).
+    *   **Пагинации**.
+*   **Глобальная обработка ошибок:** Все ошибки приложения перехватываются и возвращаются в стандартизированном, информативном формате JSON.
+*   **Интерактивная документация:** Полное описание всех эндпоинтов доступно через Swagger UI.
+*   **Контейнеризация:** Весь проект, включая приложение, базу данных PostgreSQL и S3-хранилище MinIO, полностью **контейнеризирован с помощью Docker и Docker-Compose**, позволяя запустить всю систему одной командой.
+*   **Качество кода:** Бизнес-логика покрыта **Unit-тестами** (JUnit 5, Mockito), а разработка велась с использованием методологии **GitFlow и Conventional Commits**.
 
-## Дополнительный функционал
+## 🛠️ Стек технологий
 
-1. JWT-аутентификация
-   Авторизация через Bearer Token.
-   Refresh Token для продления сессии.
+*   **Язык:** Java 21
+*   **Фреймворк:** Spring Boot 3
+*   **База данных:** PostgreSQL
+*   **Объектное хранилище:** MinIO (S3-совместимое)
+*   **Работа с данными:** Spring Data JPA, Hibernate, Liquibase
+*   **Безопасность:** Spring Security (JWT, OAuth2 Resource Server)
+*   **Контейнеризация:** Docker, Docker-Compose
+*   **Документация API:** Swagger (Springdoc OpenAPI)
+*   **Утилиты:** MapStruct, Lombok
+*   **Тестирование:** JUnit 5, Mockito
+*   **Система контроля версий:** Git (GitFlow, Conventional Commits)
 
-2. Валидация данных
-   Использовать javax.validation или Spring Validation.
-   Примеры:
-   Название тренировки: не пустое, длина ≤ 100 символов.
-   Дата: прошедшая дата.
-   Длительность: > 0 минут.
-   Калории: > 0.
+## 📖 API Документация (Swagger)
 
-3. Расширенный поиск
-   1. Фильтры:
-      Тип тренировки (cardio, strength, yoga и т.д.)
-      Дата (диапазон дат)
-      Длительность (от/до)
-   2. Сортировка:
-      По дате (ASC/DESC)
-      По калориям (ASC/DESC)
-   3. Пагинация:
-      page, size параметры.
-      Ответ с totalElements, totalPages.
+После запуска приложения интерактивная документация API будет доступна по адресу:
+[**http://localhost:8080/swagger-ui.html**](http://localhost:8080/swagger-ui.html)
 
-## Технические требования
+В Swagger UI вы можете не только изучить все эндпоинты, но и выполнять запросы к ним, предварительно авторизовавшись через эндпоинт `/api/v1/auth/login`.
 
-1. RESTful API с корректными статус-кодами.
-2. Глобальная обработка ошибок через @ControllerAdvice.
-3. Docker контейнеризация:
-   Dockerfile для приложения.
-   docker-compose.yml для запуска вместе с PostgreSQL.
-4. Чистый код с соблюдением SOLID, c разделением слоёв (Controller, Service, Repository).
-5. Использовать DTO для запросов/ответов.
-6. Swagger документация:
-   Описание всех эндпоинтов. Для каждого эндпоинта:
-   summary (1 строка) и короткое description
-   tags
-   Параметры: path, query (в т.ч. page, size, sort)
-   RequestBody: схема DTO + example
-   Responses: как минимум 200/201, 400 (валидация), 401/403 (безопасность), 404, 409 (конфликты), 500 — со схемой ErrorResponse и примерами
-   Контент-тайпы: application/json, для загрузки — multipart/form-data
-   Примеры запросов/ответов.
-   Авторизация через JWT.
-7. Следование GitFlow.  
-8. Использование Conventional Commits.
+## ⚙️ Запуск проекта
 
-## Тестирование
+Проект полностью контейнеризирован, поэтому для запуска вам понадобится только **Docker** и **Docker Compose**.
 
-Реализовать тестирование c полным покрытием функционала приложения:
+### 1. Клонирование репозитория
 
-1.  Использовать JUnit 5 для модульных тестов.
-2.  Минимальное покрытие: 70%+ по бизнес-логике.
+```bash
+git clone https://github.com/Resh1ne/fitness-tracker-api.git
+cd fitness-tracker-api
+```
 
-## Стек технологий
+### 2. Конфигурация
 
-1. Java 17+ – современная версия языка.
-2. Spring Boot – быстрый старт и конфигурация.
-3. Spring MVC – реализация REST API.
-4. Hibernate + Spring Data JPA – ORM для работы с БД.
-5. PostgreSQL – реляционная база данных.
-6. JUnit 5 – модульное тестирование.
-7. Swagger (OpenAPI) – генерация документации API.
-8. Docker – контейнеризация приложения и зависимостей. Позволяет запускать приложение в изолированной среде.
+Перед первым запуском убедитесь, что учетные данные в конфигурационных файлах вам подходят. Вы можете изменить их при необходимости.
 
-**ВАЖНО!** Реализация должна находиться на **приватном** репозитории, на который необходимо добавить <code>modsen-mentor</code> аккаунт
+*   **`docker-compose.yml`**: Настройте `POSTGRES_USER`, `POSTGRES_PASSWORD` и `POSTGRES_DB` для сервиса `db`.
+*   **`src/main/resources/application.properties`**: Настройте `spring.datasource.username` и `spring.datasource.password` для локального запуска (не через Docker).
 
-## Полезные источники
-- [Java](https://metanit.com/java/tutorial/)
-- [Hibernate](https://hibernate.org/orm/documentation/7.1/)
-- [PostgreSQL](https://www.postgresql.org/docs/)
-- [Spring Framework](https://docs.spring.io/spring-framework/reference/index.html)
-- [JWT](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html)
-- [JUnit](https://docs.junit.org/current/user-guide/)
-- [Docker](https://www.docker.com/)
-- [GitFlow](https://www.atlassian.com/ru/git/tutorials/comparing-workflows/gitflow-workflow)
-- [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/)
+*Примечание: для запуска через Docker Compose, приложение будет использовать переменные окружения, определенные в `docker-compose.yml`, а не в `application.properties`.*
+
+### 3. Сборка и запуск
+
+Выполните одну команду в корневой папке проекта:
+
+```bash
+docker-compose up --build
+```
+
+*   `--build`: Эта команда принудительно пересоберет Docker-образ вашего Java-приложения, чтобы включить все последние изменения.
+*   Команда запустит три контейнера: `fitness_app` (ваше приложение), `fitness_db` (PostgreSQL) и `fitness_minio` (S3-хранилище).
+
+### 4. Проверка
+
+*   **Приложение:** API будет доступно по адресу `http://localhost:8080`.
+*   **База данных:** PostgreSQL будет доступна для внешних подключений (например, из DBeaver) по адресу `localhost:5433`.
+*   **S3 Хранилище (MinIO):** Веб-консоль MinIO будет доступна по адресу `http://localhost:9001`.
+    *   **Логин:** `minioadmin`
+    *   **Пароль:** `minioadminpassword`
+
+При первом запуске ваше Java-приложение автоматически создаст в MinIO бакет с именем `progress-photos`.
+
+### 5. Остановка
+
+Чтобы остановить все запущенные контейнеры, нажмите `Ctrl + C` в терминале, где был запущен `docker-compose`, или выполните команду в другой вкладке терминала:
+
+```bash
+docker-compose down
+```
